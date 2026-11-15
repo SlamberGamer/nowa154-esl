@@ -1,0 +1,989 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="clean">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Nowa-154R-N Tag Studio</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;600&family=Press+Start+2P&display=swap" rel="stylesheet">
+<style>
+  /* Three themes, switch with the selector in the header: clean (default), terminal, win98. */
+  :root, :root[data-theme="terminal"] {
+    --paper:#0a0905; --panel:#15120a; --ink:#ffd37a; --muted:#f0bd5e; --faint:#d9a64a;
+    --accent:#ffb000; --accent-ink:#120d00; --accent-dark:#ffc94d; --line:#ffb000; --shadow:transparent;
+    --off-bg:#1d1910; --off-fg:#8f7a44; --btn-hover:#2a2412; --screen:#000; --phosphor:#7dff9a;
+    --ok:#7dff9a; --warn:#ff7a6b; --dot:#17130a;
+    --bw:2px; --so:0px; --r:0px;
+    --body:"IBM Plex Mono", ui-monospace, Consolas, "Courier New", monospace; --head:"Press Start 2P", var(--body);
+    --fs:14px; --hfs:10px;
+  }
+  :root[data-theme="win98"] {
+    --paper:#008080; --panel:#c0c0c0; --ink:#000; --muted:#111; --faint:#222;
+    --accent:#000080; --accent-ink:#fff; --accent-dark:#1010a0; --line:#000; --shadow:transparent;
+    --off-bg:#c0c0c0; --off-fg:#808080; --btn-hover:#d4d0c8; --screen:#000; --phosphor:#7dff9a;
+    --ok:#007a00; --warn:#b00000; --dot:transparent;
+    --bw:2px; --so:0px; --r:0px;
+    --body:Tahoma, "MS Sans Serif", Verdana, Arial, sans-serif; --head:Tahoma, Verdana, Arial, sans-serif;
+    --fs:13.5px; --hfs:13px;
+  }
+  :root[data-theme="clean"] {
+    --paper:#f2f1ed; --panel:#ffffff; --ink:#15171a; --muted:#33373d; --faint:#4a4f57;
+    --accent:#c8102e; --accent-ink:#fff; --accent-dark:#9c0b22; --line:#d4d2ca; --shadow:rgba(0,0,0,.08);
+    --off-bg:#eeede8; --off-fg:#8b8e94; --btn-hover:#f0eee8; --screen:#101410; --phosphor:#9bffb0;
+    --ok:#1a8a45; --warn:#b3001b; --dot:transparent;
+    --bw:1px; --so:0px; --r:10px;
+    --body:system-ui, -apple-system, "Segoe UI", Roboto, Helvetica, Arial, sans-serif; --head:var(--body);
+    --fs:14.5px; --hfs:14px;
+  }
+  * { box-sizing:border-box; }
+  html, body { margin:0; }
+  body { font-family:var(--body); font-size:var(--fs); line-height:1.55; color:var(--ink);
+         background:var(--paper); background-image:radial-gradient(var(--dot) 1px, transparent 1.2px);
+         background-size:14px 14px; padding:22px 16px 44px; }
+  .wrap { max-width:1120px; margin:0 auto; }
+
+  header { margin:0 0 20px; border:var(--bw) solid var(--line); background:var(--panel); border-radius:var(--r);
+           box-shadow:0 2px 6px var(--shadow); overflow:hidden; }
+  .head-in { padding:14px 18px 16px; position:relative; }
+  h1 { font-family:var(--head); font-size:15px; line-height:1.6; margin:0 0 8px; font-weight:600; letter-spacing:.4px; }
+  h1 .blink { animation:blink 1.1s steps(1) infinite; }
+  @keyframes blink { 50% { opacity:0; } }
+  .sub { color:var(--muted); font-size:var(--fs); margin:0; max-width:900px; }
+  .themebox { position:absolute; top:12px; right:14px; display:flex; align-items:center; gap:8px; font-size:13px; }
+
+  .layout { display:flex; gap:20px; flex-wrap:wrap; align-items:flex-start; }
+  .panel { background:var(--panel); border:var(--bw) solid var(--line); padding:18px; border-radius:var(--r);
+           box-shadow:0 2px 6px var(--shadow); }
+
+  .preview-wrap { flex:0 1 auto; max-width:516px; text-align:center; }
+  .bezel { display:inline-block; padding:14px; background:#1f1d18; border:2px solid #000; border-radius:calc(var(--r) * .6);
+           box-shadow:inset 0 0 0 3px #3b382f; }
+  canvas#preview { display:block; width:min(456px, calc(100vw - 100px)); aspect-ratio:1/1;
+                   height:auto; image-rendering:pixelated; background:#fff; border:2px solid #000; cursor:copy; }
+  .preview-label { margin:12px 0 0; font-size:12.5px; color:var(--muted); }
+  .preview-hint { margin:4px 0 0; font-size:13px; color:var(--faint); }
+
+  .controls { flex:1 1 420px; min-width:360px; max-width:640px; }
+  .group { padding-bottom:16px; margin-bottom:16px; border-bottom:var(--bw) dashed var(--line); }
+  .group:last-child { border-bottom:none; margin-bottom:0; padding-bottom:0; }
+  .group h3 { display:flex; align-items:center; gap:10px; font-family:var(--head); font-size:var(--hfs);
+              line-height:1.6; margin:0 0 14px; color:var(--ink); font-weight:600; }
+  .step { display:inline-flex; align-items:center; justify-content:center; min-width:28px; height:28px; padding:0 6px;
+          background:var(--accent); color:var(--accent-ink); border-radius:calc(var(--r) * .5);
+          font-family:var(--body); font-size:13px; font-weight:700; flex:none; }
+
+  .row { display:grid; grid-template-columns:96px 1fr; gap:6px 12px; align-items:center; margin:0 0 10px; }
+  .row:last-of-type { margin-bottom:0; }
+  .row > label { font-size:var(--fs); color:var(--muted); text-align:right; }
+  .ctrl { display:flex; align-items:center; flex-wrap:wrap; gap:6px 12px; font-size:var(--fs); min-width:0; }
+
+  label.radio { font-size:var(--fs); margin:0; }
+  input[type=radio], input[type=range], input[type=checkbox] { accent-color:var(--accent); }
+  input[type=range] { flex:0 1 180px; }
+  input[type=number], input[type=text], input[type=time], select {
+    font-family:var(--body); font-size:var(--fs); padding:4px 7px; color:var(--ink); background:var(--panel);
+    border:var(--bw) solid var(--line); border-radius:calc(var(--r) * .5); max-width:100%; }
+  input[type=number] { width:84px; }
+  input:focus, select:focus, button:focus-visible, a.btn:focus-visible { outline:2px solid var(--accent); outline-offset:2px; }
+  #thresholdVal { display:inline-block; width:36px; font-variant-numeric:tabular-nums; }
+
+  .btn-row { display:flex; flex-wrap:wrap; gap:10px; margin:0 0 12px; }
+  .btn-row:last-child { margin-bottom:0; }
+  button, a.btn { font-family:var(--body); font-size:var(--fs); font-weight:600; padding:7px 14px; color:var(--ink);
+           background:var(--panel); border:var(--bw) solid var(--line); border-radius:calc(var(--r) * .6); cursor:pointer;
+           text-decoration:none; display:inline-block; line-height:1.25; }
+  button:hover:not(:disabled), a.btn:hover { background:var(--btn-hover); }
+  button:active:not(:disabled), a.btn:active { transform:translateY(1px); }
+  button:disabled { color:var(--off-fg); background:var(--off-bg); cursor:not-allowed; border-style:dashed; }
+  button.primary, a.btn.primary { background:var(--accent); border-color:var(--accent); color:var(--accent-ink); }
+  button.primary:hover:not(:disabled), a.btn.primary:hover { background:var(--accent-dark); }
+  button.primary:disabled { background:var(--off-bg); border-color:var(--line); color:var(--off-fg); }
+
+  .status { display:flex; align-items:center; margin:0 0 12px; }
+  .status-dot { display:inline-block; width:12px; height:12px; background:var(--off-fg); border-radius:calc(var(--r) * .5);
+                margin-right:9px; flex:none; }
+  .status-dot.on { background:var(--ok); }
+
+  .progress-wrap { background:var(--off-bg); border:var(--bw) solid var(--line); height:16px; overflow:hidden; margin:6px 0 12px; border-radius:calc(var(--r) * .5); }
+  #progressBar { height:100%; width:0%; background:var(--accent); transition:width .15s; }
+  #log { height:150px; overflow-y:auto; color:var(--phosphor); border:var(--bw) solid var(--line); border-radius:calc(var(--r) * .6);
+         font:13px/1.5 "IBM Plex Mono", ui-monospace, Consolas, monospace; padding:9px 12px; white-space:pre-wrap; background:var(--screen); }
+
+  .note { font-size:13px; line-height:1.5; color:var(--faint); margin:10px 0 0; }
+  .warn { color:var(--warn); }
+  code { background:var(--off-bg); color:var(--ink); border:1px solid var(--line); padding:0 5px; font-size:12.5px; font-family:var(--body); }
+
+  details.tech { margin-top:12px; border-left:3px solid var(--accent); padding:2px 0 2px 12px; }
+  details.tech summary { cursor:pointer; font-size:13px; color:var(--muted); user-select:none; }
+  details.tech summary:hover { color:var(--accent); }
+  details.tech[open] summary { margin-bottom:4px; }
+
+  .flasher { margin-top:24px; }
+  .flasher h2 { font-family:var(--head); font-size:var(--hfs); line-height:1.6; margin:0 0 12px; font-weight:600; }
+  .flasher ol { margin:0 0 14px; padding-left:24px; }
+  .flasher li { margin:3px 0; }
+  .flash-frame { display:none; width:100%; height:560px; border:var(--bw) solid var(--line); background:#fff; margin-top:6px; }
+  .flash-frame.on { display:block; }
+  footer { margin-top:24px; text-align:center; font-size:12px; line-height:1.6; color:var(--faint); }
+
+  /* ---- Terminal extras: faint scanlines, amber glow on headings ---- */
+  :root[data-theme="terminal"] body::after { content:""; position:fixed; inset:0; pointer-events:none;
+    background:repeating-linear-gradient(0deg, rgba(0,0,0,.07) 0 1px, transparent 1px 3px); }
+  :root[data-theme="terminal"] h1, :root[data-theme="terminal"] .group h3 { text-shadow:0 0 8px rgba(255,176,0,.55); }
+  :root[data-theme="terminal"] .panel, :root[data-theme="terminal"] header { box-shadow:0 0 0 1px #000, 0 0 18px rgba(255,176,0,.12); }
+
+  /* ---- Windows 98 extras: bevels and navy title bars ---- */
+  :root[data-theme="win98"] .panel, :root[data-theme="win98"] header, :root[data-theme="win98"] button, :root[data-theme="win98"] a.btn {
+    border:2px solid; border-color:#fff #404040 #404040 #fff; box-shadow:1px 1px 0 #000; }
+  :root[data-theme="win98"] button:active:not(:disabled), :root[data-theme="win98"] a.btn:active { border-color:#404040 #fff #fff #404040; transform:none; }
+  :root[data-theme="win98"] button.primary, :root[data-theme="win98"] a.btn.primary { background:#c0c0c0; color:#000; border-color:#fff #404040 #404040 #fff; outline:1px solid #000; }
+  :root[data-theme="win98"] button.primary:hover:not(:disabled) { background:#d4d0c8; }
+  :root[data-theme="win98"] button:disabled { color:#808080; text-shadow:1px 1px 0 #fff; border-style:solid; }
+  :root[data-theme="win98"] input[type=text], :root[data-theme="win98"] input[type=number], :root[data-theme="win98"] input[type=time], :root[data-theme="win98"] select {
+    background:#fff; border:2px solid; border-color:#404040 #fff #fff #404040; }
+  :root[data-theme="win98"] .group h3 { background:linear-gradient(90deg,#000080,#1084d0); color:#fff; padding:3px 8px; }
+  :root[data-theme="win98"] .step { background:#c0c0c0; color:#000; border:2px solid; border-color:#fff #404040 #404040 #fff; }
+  :root[data-theme="win98"] .group { border-bottom-style:solid; border-bottom-color:#808080; border-bottom-width:1px; }
+  :root[data-theme="win98"] h1 { background:linear-gradient(90deg,#000080,#1084d0); color:#fff; padding:6px 10px; margin:-14px -18px 12px; font-size:15px; }
+  :root[data-theme="win98"] .themebox { top:8px; color:#fff; }
+  :root[data-theme="win98"] .progress-wrap, :root[data-theme="win98"] #log { border:2px solid; border-color:#404040 #fff #fff #404040; }
+  :root[data-theme="win98"] details.tech { border-left-color:#000080; }
+  :root[data-theme="win98"] footer { color:#fff; }
+  :root[data-theme="win98"] .bezel { background:#808080; }
+
+
+  /* ---- Compact layout: preview pinned on the left, controls flow in two columns ---- */
+  :root[data-theme="terminal"] { --fs:12.5px; --hfs:9px; }
+  :root[data-theme="win98"] { --fs:12.5px; --hfs:12px; }
+  :root[data-theme="clean"] { --fs:13px; --hfs:13px; }
+  body { padding:10px 12px 18px; line-height:1.4; }
+  .wrap { max-width:1560px; }
+  header { margin:0 0 10px; }
+  .head-in { padding:8px 14px 10px; }
+  h1 { font-size:12px; margin:0 0 3px; }
+  .sub { font-size:12px; line-height:1.4; max-width:1100px; }
+  .themebox { top:6px; }
+  .layout { gap:12px; flex-wrap:nowrap; align-items:flex-start; }
+  .panel { padding:10px 12px; }
+  .preview-wrap { flex:0 0 408px; max-width:408px; position:sticky; top:10px; }
+  .bezel { padding:10px; }
+  canvas#preview { width:min(372px, calc(100vw - 80px)); }
+  .preview-label { margin:6px 0 0; font-size:11.5px; }
+  .preview-hint { margin:2px 0 0; font-size:11.5px; }
+  .controls { flex:1 1 0; min-width:0; max-width:none; column-count:2; column-gap:14px; }
+  .group { break-inside:avoid; padding-bottom:8px; margin-bottom:10px; }
+  .group h3 { margin:0 0 8px; gap:8px; }
+  .step { min-width:22px; height:22px; font-size:11px; }
+  .row { grid-template-columns:62px 1fr; gap:4px 8px; margin:0 0 5px; }
+  .ctrl { gap:3px 8px; }
+  input[type=number], input[type=text], input[type=time], select { padding:2px 5px; }
+  input[type=number] { width:64px; }
+  input[type=text] { width:11.5em !important; }
+  input[type=range] { flex:0 1 110px; }
+  button, a.btn { padding:4px 10px; }
+  .btn-row { gap:6px; margin:0 0 6px; }
+  .status { margin:0 0 6px; }
+  .progress-wrap { height:10px; margin:3px 0 6px; }
+  #log { height:96px; font-size:12px; padding:6px 8px; }
+  .note { font-size:11.5px; line-height:1.4; margin:5px 0 0; }
+  details.tech { margin-top:6px; }
+  .flasher { margin-top:10px; }
+  .flasher ol { margin:0 0 8px; padding-left:20px; }
+  .flash-frame { height:440px; }
+  .flasher summary { cursor:pointer; padding:2px 0; }
+  .flasher { padding:6px 12px; }
+  .flasher[open], .flasher details[open] { padding-bottom:6px; }
+  footer { margin-top:10px; font-size:11px; }
+  @media (max-width:1100px) { .controls { column-count:1; } }
+  @media (max-width:860px) { .layout { flex-wrap:wrap; } .preview-wrap { position:static; flex:1 1 100%; max-width:none; } }
+  @media (max-width:560px) { .row { grid-template-columns:1fr; } .row > label { text-align:left; } h1 { font-size:12px; } .themebox { position:static; margin-top:8px; } }
+</style>
+</head>
+<body>
+<div class="wrap">
+<header>
+  <div class="head-in">
+    <div class="themebox"><label for="themeSel">Theme</label><select id="themeSel"><option value="clean">Clean</option><option value="terminal">Terminal</option><option value="win98">Windows 98</option></select></div>
+    <h1>NOWA-154R-N // TAG STUDIO<span class="blink">_</span></h1>
+    <p class="sub">Hanshow 152×152 e-ink tag. Send images over Bluetooth, set up the live name card (date, time, HP, EXP, LV, battery), and flash firmware over UART. Three-colour screen: <b>red</b> pixels in an image go to the red channel; everything else is dithered to black and white (needs firmware with the <code>0x06</code> command).</p>
+  </div>
+</header>
+
+<div class="layout">
+  <div class="panel preview-wrap">
+    <div class="bezel" id="dropZone">
+      <canvas id="preview" width="152" height="152"></canvas>
+    </div>
+    <p class="preview-label">Preview 152×152 · black/white/red · pixel-accurate WYSIWYG</p>
+    <p class="preview-hint">Drag and drop or paste an image onto this page</p>
+    <p class="note">Orientation: the test pattern's solid triangle should land in the tag's top-left; if not, use the transform buttons.</p>
+  </div>
+
+  <div class="panel controls">
+    <div class="group">
+      <h3><span class="step">1</span>Image source</h3>
+      <div class="btn-row">
+        <button id="btnFile" class="primary">Choose image…</button>
+        <button id="btnTest">Generate test pattern</button>
+      </div>
+      <input type="file" id="fileInput" accept="image/*" hidden>
+    </div>
+
+    <div class="group">
+      <h3><span class="step">1b</span>Name card (live date/time)</h3>
+      <p class="note">Fixed artwork; only date and time are drawn live (browser time + offset below).</p>
+      <div class="btn-row">
+        <button id="btnCard" class="primary">Generate card now</button>
+        <label style="display:inline-flex;gap:6px;align-items:center;"><input type="checkbox" id="cardAuto"> Auto-send every
+          <select id="cardEvery"><option>5</option><option>10</option><option selected>15</option><option>30</option><option>60</option></select> min</label>
+      </div>
+      <div class="row"><label>Name</label><div class="ctrl"><input type="text" id="cardName" maxlength="13" value="FAIZ FAUZI" style="width:12em"> (top-left, up to 13 characters)</div></div>
+      <div class="row"><label>Title</label><div class="ctrl"><input type="text" id="cardTitle" maxlength="14" value="ELECTRO MADMAN" style="width:12em"> (bottom banner, up to 14 characters)</div></div>
+      <div class="btn-row">
+        <button id="btnCardText" disabled>Save name + title to tag</button>
+        <button id="btnCardReset" disabled>Back to artwork text</button>
+      </div>
+      <p class="note">Saved in the tag's flash (card firmware). Drawn in the tag's own pixel font.</p>
+      <div class="row"><label>HP</label><div class="ctrl"><select id="cardHp"><option value="3" selected>3 hearts</option><option value="2">2 hearts</option><option value="1">1 heart</option><option value="0">0 hearts</option></select></div></div>
+      <div class="row"><label>EXP</label><div class="ctrl"><select id="cardExpMode"><option value="1" selected>Time window: full at start, empty at end</option><option value="0">Manual</option></select>
+        <input type="range" id="cardExp" min="0" max="100" value="70"> <span id="cardExpVal">70</span>%</div></div>
+      <div class="row"><label>Window</label><div class="ctrl">start <input type="time" id="cardExpStart" value="08:00"> end <input type="time" id="cardExpEnd" value="17:00"> (end earlier than start = overnight window)</div></div>
+      <div class="row"><label>LV</label><div class="ctrl"><label style="display:inline-flex;gap:6px;align-items:center;"><input type="checkbox" id="cardLvOn" checked> Level +1 every hour, level 1 starts at</label> <input type="time" id="cardLvStart" value="08:00"> <span class="note" style="margin:0;">(1-24, then repeats)</span></div></div>
+      <div class="row"><label>BATT</label><div class="ctrl"><select id="cardBattMode"><option value="0" selected>Real battery level</option><option value="1">Manual</option></select>
+        <input type="range" id="cardBatt" min="0" max="100" value="80"> <span id="cardBattVal">80</span>%</div></div>
+      <div class="row"><label>Refresh</label><div class="ctrl">redraw the card every <select id="cardRefresh"><option value="1" selected>1</option><option value="2">2</option><option value="5">5</option><option value="10">10</option><option value="15">15</option><option value="30">30</option></select> min <span class="note" style="margin:0;">(longer = better battery life)</span></div></div>
+      <div class="row"><label>LED</label><div class="ctrl"><label style="display:inline-flex;gap:6px;align-items:center;"><input type="checkbox" id="cardLed" checked> Status LED blinks every 10 s</label> <span class="note" style="margin:0;">(off = dark)</span></div></div>
+      <div class="btn-row"><button id="btnCardStats" disabled>Save HP / EXP / BATT to tag</button></div>
+      <p class="note">Red changes (lost heart, battery under 20%) show on the next full refresh; saving triggers one.</p>
+      <p class="note" id="cardInfo">Auto-send needs this page open and connected; each send is a ~13 s full refresh.</p>
+    </div>
+
+    <div class="group">
+      <h3><span class="step">2</span>Process</h3>
+      <div class="row">
+        <label>Scale</label>
+        <div class="ctrl">
+          <label class="radio"><input type="radio" name="fit" value="cover" checked>Fill (crop)</label>
+          <label class="radio"><input type="radio" name="fit" value="contain">Fit whole image</label>
+        </div>
+      </div>
+      <div class="row">
+        <label>Dithering</label>
+        <div class="ctrl">
+          <select id="ditherMode">
+            <option value="fs" selected>Floyd–Steinberg dithering</option>
+            <option value="bayer">Bayer 4×4 dithering</option>
+            <option value="threshold">Fixed threshold</option>
+          </select>
+        </div>
+      </div>
+      <div class="row">
+        <label>Threshold</label>
+        <div class="ctrl">
+          <input type="range" id="threshold" min="32" max="224" value="128">
+          <span id="thresholdVal">128</span>
+        </div>
+      </div>
+      <div class="row">
+        <label>Transform</label>
+        <div class="ctrl">
+          <button id="btnRot">↻ Rotate 90°</button>
+          <button id="btnFlipH">⇋ Flip horizontal</button>
+          <button id="btnFlipV">⇵ Flip vertical</button>
+          <button id="btnInv">◐ Invert</button>
+        </div>
+      </div>
+      <p class="note">Red = hue within ±25° of pure red, saturation ≥ 45%.</p>
+    </div>
+
+    <div class="group">
+      <h3><span class="step">3</span>Bluetooth send</h3>
+      <p class="status"><span class="status-dot" id="dot"></span><span id="bleStatus">Not connected</span></p>
+      <div class="btn-row">
+        <button id="btnConnect" class="primary">Connect device</button>
+        <button id="btnReconn" disabled>Reconnect</button>
+        <button id="btnSend" disabled>Send to screen</button>
+        <button id="btnDisc" disabled>Disconnect</button>
+      </div>
+      <div class="progress-wrap"><div id="progressBar"></div></div>
+      <div id="log"></div>
+      <p class="note"><span class="warn">Old firmware (without the 0x06 command) can still receive images: red data is ignored and red pixels are shown as white.</span></p>
+      <details class="tech">
+        <summary>Send protocol details</summary>
+        <p class="note">Needs Chrome / Edge. Send sequence: <code>05 01</code> hold → <code>00 FF</code> clear both planes → <code>02 00 00</code> →
+          13×<code>03</code> (black/white, 3040 B) → <code>06 01</code> switch to red plane → 13×<code>03</code> (red, 3040 B, skipped if there are no red pixels) → <code>01</code> full refresh.</p>
+      </details>
+    </div>
+
+    <div class="group">
+      <h3><span class="step">4</span>Time sync</h3>
+      <div class="row">
+        <label>Time zone</label>
+        <div class="ctrl"><b id="tzInfo">--:--</b>(from browser)</div>
+      </div>
+      <div class="row">
+        <label>Offset</label>
+        <div class="ctrl">
+          <input type="number" id="timeOffset" value="0" step="1" min="-720" max="720"> minutes
+          <span class="note" style="margin:0;">(can be negative, for fine-tuning the clock)</span>
+        </div>
+      </div>
+      <div class="row">
+        <label>Device will show</label>
+        <div class="ctrl"><b id="deviceTime">--:--:--</b><span id="offsetDetail" class="note" style="margin:0;"></span></div>
+      </div>
+      <div class="btn-row" style="margin-top:10px;">
+        <button id="btnTimeSync" class="primary" disabled>Sync time to device</button>
+      </div>
+      <details class="tech">
+        <summary>Time sync notes</summary>
+        <p class="note">Sent over the RxTx channel as <code>DD</code> + 4-byte big-endian unix seconds (built-in firmware command, no reflash needed).
+          The clock face shows the sent value directly (modulo), so the time zone is already added in. Device time resets to zero on reboot and runs about 27 seconds slow per day; re-sync periodically or pre-compensate with a positive offset.
+          After syncing, the clock face is usually redrawn immediately (within about 1 minute at most).</p>
+      </details>
+    </div>
+  </div>
+</div>
+
+<section class="panel flasher" id="flasher"><details>
+  <summary><b>FLASH FIRMWARE // UART</b> (click to open)</summary>
+  <p class="note" style="margin:0 0 10px;">This is the original <b>USB-COM Flash Writer</b> by atc1441, loaded inside this page. It needs internet access and Chrome or Edge (Web Serial). Flash a <code>.bin</code> from this repo's <code>bin/</code> folder, for example <code>ATC_Paper_nowa154_me_card.bin</code>.</p>
+  <ol>
+    <li>Wire the USB-UART adapter: <b>TX → SWS</b> on the tag, plus VCC and GND.</li>
+    <li>Press <b>Load flasher here</b>, choose the baud rate and the firmware file, then open the COM port and flash.</li>
+    <li>When it finishes, <b>unplug the UART wires</b> so the tag can run.</li>
+  </ol>
+  <div class="btn-row">
+    <button id="btnFlashLoad" class="primary">Load flasher here</button>
+    <a class="btn" href="https://atc1441.github.io/ATC_TLSR_Paper_UART_Flasher.html" target="_blank" rel="noopener">Open in a new tab</a>
+  </div>
+  <iframe id="flashFrame" class="flash-frame" title="ATC TLSR Paper UART Flasher" allow="serial; usb" referrerpolicy="no-referrer"></iframe>
+  <p class="note">If the serial port list stays empty inside the frame, use "Open in a new tab" instead; some browsers block Web Serial in embedded pages.</p>
+</details></section>
+<footer>DESIGNED BY FAIZ FAUZI</footer>
+</div>
+
+<script>
+'use strict';
+const W = 152, H = 152;
+const SRC_OFFSET = 8;                 // BWR_154_SRC_OFFSET (glass source offset, final firmware value δ=8)
+const COL_BYTES = 20;                 // (152+8+7)/8, controller RAM bytes per line
+const BUF_SIZE = W * COL_BYTES;       // 3040
+const EPD_SERVICE = '13187b10-eba9-a3ba-044e-83d3217d9a38'; // note the fourth group is 9a38
+const EPD_CHAR    = '4b646063-6264-f3a7-8941-e65356ea82fe';
+const RXTX_SERVICE = 0x1f10;          // RxTx channel (firmware cmd_parser: 0xDD = set time)
+const RXTX_CHAR    = 0x1f1f;
+const CHUNK = 240;                    // image data bytes per packet (+1 command byte = 241 <= MTU 247)
+
+// ---- State ----
+let srcImage = null;                  // ImageBitmap (null for the test pattern)
+let bmp = null;                       // Uint8Array(W*H), 1=black 0=white (glass coordinates, x left→right / y top→bottom)
+let redBmp = null;                    // Uint8Array(W*H), 1=red (transformed together with bmp; invert leaves red alone)
+let device = null, charEPD = null, charRxTx = null, server = null;
+let sending = false;
+let timeSyncing = false;
+let connecting = false; // while true, onDisconnect does not reset (inside the retry loop the disconnect is intentional)
+
+// ---- Red detection (three-colour screen: red pixels go to the red plane, the black/white plane stays white there)----
+const RED_SAT_MIN = 0.45;   // minimum saturation (max-min)/max
+const RED_VAL_MIN = 60;     // minimum red-channel brightness
+const RED_HUE_SPAN = 25;    // allowed hue distance from pure red (±°; hue is within ±60° when R is the largest channel)
+function isRedPixel(r, g, b) {
+  const max = Math.max(r, g, b), min = Math.min(r, g, b);
+  if (r < RED_VAL_MIN || r < max || max === min) return false; // red must dominate and be bright enough
+  if ((max - min) / max < RED_SAT_MIN) return false;           // saturation too low
+  const hue = 60 * (g - b) / (max - min);
+  return Math.abs(hue) <= RED_HUE_SPAN;
+}
+
+const $ = id => document.getElementById(id);
+const logBox = $('log');
+function log(msg) {
+  const t = new Date().toTimeString().slice(0, 8);
+  logBox.textContent += `[${t}] ${msg}\n`;
+  logBox.scrollTop = logBox.scrollHeight;
+}
+function setProgress(p) { $('progressBar').style.width = (p * 100).toFixed(1) + '%'; }
+
+// ---- Packing: bit-for-bit the same as the firmware FixBuffer path (confirmed on a real tag 2026-10-21: MSB-first within each byte)----
+// The OBD virtual buffer is LSB-first; after FixBuffer's ucMirror bit reversal the glass mapping is MSB-first
+// Black glass pixel (x,y) -> clear bit (0x80 >> ((y+8)&7)) in buf[(151-x)*20 + ((y+8)>>3)]; buffer starts all 0xFF (white)
+function packBuffer(bmp) {
+  const buf = new Uint8Array(BUF_SIZE).fill(0xFF);
+  for (let y = 0; y < H; y++) {
+    const t = y + SRC_OFFSET, byteIdx = t >> 3, bit = 0x80 >> (t & 7);
+    const row = y * W;
+    for (let x = 0; x < W; x++) {
+      if (bmp[row + x]) buf[(W - 1 - x) * COL_BYTES + byteIdx] &= ~bit;
+    }
+  }
+  return buf;
+}
+
+// Red plane packing: same glass mapping, starts at 0x00 (no red), red pixels set the bit (1 = red in 0x26 RAM)
+function packRedBuffer(rb) {
+  const buf = new Uint8Array(BUF_SIZE);
+  for (let y = 0; y < H; y++) {
+    const t = y + SRC_OFFSET, byteIdx = t >> 3, bit = 0x80 >> (t & 7);
+    const row = y * W;
+    for (let x = 0; x < W; x++) {
+      if (rb[row + x]) buf[(W - 1 - x) * COL_BYTES + byteIdx] |= bit;
+    }
+  }
+  return buf;
+}
+
+// ---- Image processing ----
+const BAYER = [0,8,2,10, 12,4,14,6, 3,11,1,9, 15,7,13,5];
+
+function renderPipeline() {
+  if (!srcImage) return;
+  const off = document.createElement('canvas');
+  off.width = W; off.height = H;
+  const ctx = off.getContext('2d', { willReadFrequently: true });
+  ctx.fillStyle = '#fff'; ctx.fillRect(0, 0, W, H);
+  const fit = document.querySelector('input[name=fit]:checked').value;
+  const iw = srcImage.width, ih = srcImage.height;
+  const s = fit === 'cover' ? Math.max(W / iw, H / ih) : Math.min(W / iw, H / ih);
+  const dw = iw * s, dh = ih * s;
+  ctx.drawImage(srcImage, (W - dw) / 2, (H - dh) / 2, dw, dh);
+  const gray = new Float32Array(W * H);
+  const red = new Uint8Array(W * H);
+  const d = ctx.getImageData(0, 0, W, H).data;
+  let redCount = 0;
+  for (let i = 0; i < W * H; i++) {
+    const r = d[i * 4], g = d[i * 4 + 1], b = d[i * 4 + 2];
+    gray[i] = 0.299 * r + 0.587 * g + 0.114 * b;
+    if (isRedPixel(r, g, b)) { red[i] = 1; redCount++; gray[i] = 255; } // red pixels do not take part in black/white dithering
+  }
+
+  const mode = $('ditherMode').value, thr = +$('threshold').value;
+  const out = new Uint8Array(W * H);
+  if (mode === 'fs') {
+    for (let y = 0; y < H; y++) {
+      for (let x = 0; x < W; x++) {
+        const i = y * W + x, old = gray[i];
+        const nv = old < 128 ? 0 : 255;
+        out[i] = old < 128 ? 1 : 0;
+        const e = old - nv;
+        if (x + 1 < W) gray[i + 1] += e * 7 / 16;
+        if (y + 1 < H) {
+          if (x > 0) gray[i + W - 1] += e * 3 / 16;
+          gray[i + W] += e * 5 / 16;
+          if (x + 1 < W) gray[i + W + 1] += e * 1 / 16;
+        }
+      }
+    }
+  } else if (mode === 'bayer') {
+    for (let y = 0; y < H; y++)
+      for (let x = 0; x < W; x++) {
+        const m = BAYER[(y & 3) * 4 + (x & 3)];
+        out[y * W + x] = gray[y * W + x] < (m + 0.5) * 16 ? 1 : 0;
+      }
+  } else {
+    for (let i = 0; i < W * H; i++) out[i] = gray[i] < thr ? 1 : 0;
+  }
+  bmp = out; redBmp = red;
+  if (redCount) log(`Detected ${redCount} red pixels (sent on the red plane)`);
+  drawPreview();
+}
+
+function testPattern() {
+  const off = document.createElement('canvas');
+  off.width = W; off.height = H;
+  const c = off.getContext('2d');
+  c.fillStyle = '#fff'; c.fillRect(0, 0, W, H);
+  c.fillStyle = '#000';
+  // Outer 1 px border: checks that the full 152×152 is covered
+  c.fillRect(0, 0, W, 1); c.fillRect(0, H - 1, W, 1);
+  c.fillRect(0, 0, 1, H); c.fillRect(W - 1, 0, 1, H);
+  // L-shaped corner marks (arm 14 px / thickness 3 px, inset 5 px)
+  const arm = 14, th = 3, inset = 5;
+  c.fillRect(inset, inset, arm, th); c.fillRect(inset, inset, th, arm);                                   // top-left
+  c.fillRect(W - inset - arm, inset, arm, th); c.fillRect(W - inset - th, inset, th, arm);                // top-right
+  c.fillRect(inset, H - inset - th, arm, th); c.fillRect(inset, H - inset - arm, th, arm);                // bottom-left
+  c.fillRect(W - inset - arm, H - inset - th, arm, th); c.fillRect(W - inset - th, H - inset - arm, th, arm); // bottom-right
+  // Solid triangle in the top-left corner (orientation marker: should appear in the top-left of the real tag)
+  c.beginPath(); c.moveTo(16, 16); c.lineTo(44, 16); c.lineTo(16, 44); c.closePath(); c.fill();
+  // Red solid triangle in the top-right corner (mirror of the black one at top-left: checks that the red plane orientation/offset matches the black/white plane)
+  c.fillStyle = '#f00';
+  c.beginPath(); c.moveTo(W - 16, 16); c.lineTo(W - 44, 16); c.lineTo(W - 16, 44); c.closePath(); c.fill();
+  // Full-width red bar (checks that the red plane covers the full X direction)
+  c.fillRect(0, 106, W, 8);
+  // Centre text
+  c.fillStyle = '#000';
+  c.font = 'bold 30px Consolas, monospace';
+  c.textAlign = 'center'; c.textBaseline = 'middle';
+  c.fillText('152×152', W / 2, H / 2 - 14);
+  c.font = 'bold 16px Consolas, monospace';
+  c.fillText('NOWA TEST', W / 2, H / 2 + 16);
+  const d = c.getImageData(0, 0, W, H).data;
+  bmp = new Uint8Array(W * H);
+  redBmp = new Uint8Array(W * H);
+  for (let i = 0; i < W * H; i++) {
+    const r = d[i * 4], g = d[i * 4 + 1], b = d[i * 4 + 2];
+    if (isRedPixel(r, g, b)) redBmp[i] = 1;
+    else if (0.299 * r + 0.587 * g + 0.114 * b < 128) bmp[i] = 1;
+  }
+  srcImage = null;
+  drawPreview();
+  if (charEPD) $('btnSend').disabled = false;
+  log('Test pattern generated (border + corner marks + black/red direction triangles + red bar)');
+}
+
+// ---- Transform ----
+function transform(kind) {
+  if (!bmp) return;
+  const src = bmp, dst = new Uint8Array(W * H);
+  const rsrc = redBmp || new Uint8Array(W * H), rdst = new Uint8Array(W * H);
+  for (let y = 0; y < H; y++) for (let x = 0; x < W; x++) {
+    let nx, ny;
+    if (kind === 'rot')   { nx = H - 1 - y; ny = x; }        // clockwise 90°
+    if (kind === 'fliph') { nx = W - 1 - x; ny = y; }
+    if (kind === 'flipv') { nx = x; ny = H - 1 - y; }
+    if (kind === 'inv')   { nx = x; ny = y; }
+    dst[ny * W + nx] = kind === 'inv' ? 1 - src[y * W + x] : src[y * W + x];
+    rdst[ny * W + nx] = rsrc[y * W + x]; // the red plane follows the geometric transforms; invert leaves red alone
+  }
+  bmp = dst; redBmp = rdst; drawPreview();
+}
+
+function drawPreview() {
+  const cv = $('preview'), ctx = cv.getContext('2d');
+  const img = ctx.createImageData(W, H);
+  for (let i = 0; i < W * H; i++) {
+    const o = i * 4;
+    if (redBmp && redBmp[i]) {
+      img.data[o] = 196; img.data[o + 1] = 22; img.data[o + 2] = 22; // approximate e-ink red
+    } else {
+      const v = bmp ? (bmp[i] ? 0 : 255) : 255;
+      img.data[o] = img.data[o + 1] = img.data[o + 2] = v;
+    }
+    img.data[o + 3] = 255;
+  }
+  ctx.putImageData(img, 0, 0);
+}
+
+// ---- Bluetooth ----
+function bleAvailable() {
+  if (!navigator.bluetooth) {
+    log('✗ This browser does not support Web Bluetooth. Open this page in Chrome / Edge.');
+    alert('Chrome or Edge is required (Web Bluetooth). If opening from a file is blocked, run python -m http.server and use localhost.');
+    return false;
+  }
+  return true;
+}
+
+// Same retry behaviour as the original atc1441 page: on some computers GATT discovery fails at random for this tag,
+// the original page hides this with up to 6 silent retries (handleError -> connect loop); a single attempt sometimes fails
+async function gattDiscover(maxAttempts) {
+  let lastErr = null;
+  for (let attempt = 1; attempt <= maxAttempts; attempt++) {
+    try {
+      log(`Connection attempt ${attempt}/${maxAttempts}…`);
+      server = await device.gatt.connect();
+      const svc = await server.getPrimaryService(EPD_SERVICE);
+      charEPD = await svc.getCharacteristic(EPD_CHAR);
+      try { // RxTx channel (used for time sync): also looked up by UUID; some firmware may lack it, which does not block the connection
+        charRxTx = await (await server.getPrimaryService(RXTX_SERVICE)).getCharacteristic(RXTX_CHAR);
+      } catch (_) { charRxTx = null; }
+      return true;
+    } catch (e) {
+      lastErr = e;
+      log('  failed: ' + e.message);
+      if (device.gatt && device.gatt.connected) { try { device.gatt.disconnect(); } catch (_) {} }
+      await new Promise(r => setTimeout(r, 400));
+    }
+  }
+  throw lastErr;
+}
+
+async function connect() {
+  if (!bleAvailable()) return;
+  connecting = true;
+  try {
+    log('Please choose a device (name starts with ESL_)…');
+    device = await navigator.bluetooth.requestDevice({
+      acceptAllDevices: true,
+      optionalServices: [EPD_SERVICE, RXTX_SERVICE]
+    });
+    device.addEventListener('gattserverdisconnected', onDisconnect);
+    await gattDiscover(6);
+    logBleReady();
+    updateBleUI(true);
+  } catch (e) { log('✗ Connection failed: ' + e.message); resetBle(); }
+  finally { connecting = false; }
+}
+
+function logBleReady() {
+  log(`✓ Connected to ${device.name || '(unnamed)'}, EPD characteristic ready` +
+    (charRxTx ? ', RxTx ready (time sync available)' : '; RxTx service not found, time sync unavailable'));
+}
+
+// Reconnect to the already authorised device (no chooser shown)
+async function reconnect() {
+  if (!device || connecting) return;
+  connecting = true;
+  try {
+    await gattDiscover(6);
+    logBleReady();
+    updateBleUI(true);
+  } catch (e) { log('✗ Reconnect failed: ' + e.message); }
+  finally { connecting = false; }
+}
+
+function onDisconnect() {
+  if (connecting) return; // intentional disconnect inside the connect() retry loop
+  log('Device disconnected');
+  resetBle();
+}
+function resetBle() {
+  // Must disconnect explicitly: a BLE peripheral stops advertising while connected, and a leaked connection makes the tag disappear from scans
+  if (device && device.gatt && device.gatt.connected) {
+    try { device.gatt.disconnect(); } catch (e) { /* ignore if already disconnected */ }
+  }
+  server = null; charEPD = null; charRxTx = null; sending = false; // keep device so "Reconnect" can reuse it
+  updateBleUI(false);
+}
+function updateBleUI(connected) {
+  $('dot').className = 'status-dot' + (connected ? ' on' : '');
+  $('bleStatus').textContent = connected ? 'Connected' : (device ? 'Not connected (can reconnect)' : 'Not connected');
+  $('btnSend').disabled = !connected || !bmp;
+  $('btnTimeSync').disabled = !connected || !charRxTx;
+  $('btnCardText').disabled = !connected || !charEPD;
+  $('btnCardReset').disabled = !connected || !charEPD;
+  $('btnCardStats').disabled = !connected || !charEPD;
+  $('btnDisc').disabled = !connected;
+  $('btnConnect').disabled = connected;
+  $('btnReconn').disabled = connected || !device;
+}
+
+async function write(bytes, note) {
+  await charEPD.writeValue(new Uint8Array(bytes));
+  if (note) log(note);
+}
+
+async function sendImage() {
+  if (!charEPD || !bmp || sending) return;
+  sending = true; $('btnSend').disabled = true;
+  const t0 = performance.now();
+  try {
+    const buf = packBuffer(bmp);
+    const rbuf = redBmp ? packRedBuffer(redBmp) : null;
+    const hasRed = !!(rbuf && rbuf.some(v => v !== 0));
+    const total = BUF_SIZE + (hasRed ? BUF_SIZE : 0);
+    let sent = 0;
+    const chunks = Math.ceil(BUF_SIZE / CHUNK);
+    const uploadPlane = async (data, name) => {
+      let off = 0, part = 0;
+      while (off < BUF_SIZE) {
+        const take = Math.min(CHUNK, BUF_SIZE - off);
+        const frame = new Uint8Array(1 + take);
+        frame[0] = 0x03;
+        frame.set(data.subarray(off, off + take), 1);
+        await charEPD.writeValue(frame);
+        off += take; sent += take;
+        setProgress(sent / total);
+        if (++part % 4 === 0 || off >= BUF_SIZE)
+          log(`  ${name} plane packet ${part}/${chunks} … ${sent}/${total} bytes`);
+      }
+    };
+    log(`Sending ${total} bytes (black/white${hasRed ? ' + red' : ''} plane)…`);
+    await write([0x05, 0x01], 'hold image mode (0x05 01)');
+    await write([0x00, 0xFF], 'clear both planes to white + speed up (00 FF)');
+    await write([0x02, 0x00, 0x00], 'reset b/w plane write pointer (02 00 00)');
+    await uploadPlane(buf, 'black/white');
+    if (hasRed) {
+      await write([0x06, 0x01], 'switch to red plane + reset pointer (06 01)');
+      await uploadPlane(rbuf, 'red');
+    }
+    await write([0x01], 'trigger full refresh (01), the screen takes about 2-4 s to refresh…');
+    const sec = ((performance.now() - t0) / 1000).toFixed(1);
+    log(`✓ Sent in ${sec}s (once the refresh finishes the image stays and is not overwritten by the clock)`);
+    setTimeout(() => { sending = false; if (charEPD) $('btnSend').disabled = false; }, 5000);
+  } catch (e) {
+    log('✗ Send failed: ' + e.message + ' (if the link dropped, reconnect)');
+    setProgress(0); sending = false;
+    if (charEPD) $('btnSend').disabled = false;
+  }
+}
+
+// ---- Time sync ----
+// The clock face shows the sent value directly (modulo, no time zone concept), so what is sent = unix seconds + browser time zone + manual offset
+function tzMinutes() { return -new Date().getTimezoneOffset(); }
+function offsetMinutes() {
+  const v = parseInt($('timeOffset').value, 10);
+  if (Number.isNaN(v)) return 0;
+  return Math.max(-720, Math.min(720, v));
+}
+function fmtOffset(min) {
+  const a = Math.abs(min);
+  return `${min < 0 ? '-' : '+'}${String(Math.floor(a / 60)).padStart(2, '0')}:${String(a % 60).padStart(2, '0')}`;
+}
+function updateTimePanel() {
+  const tz = tzMinutes(), off = offsetMinutes();
+  $('tzInfo').textContent = fmtOffset(tz);
+  $('deviceTime').textContent = new Date(Date.now() + off * 60000).toTimeString().slice(0, 8);
+  $('offsetDetail').textContent = `(time zone ${fmtOffset(tz)}${off ? `, offset ${off > 0 ? '+' : ''}${off} min` : ''})`;
+}
+
+async function syncTime() {
+  if (!charRxTx || timeSyncing) return;
+  timeSyncing = true; $('btnTimeSync').disabled = true;
+  try {
+    const t = Math.floor(Date.now() / 1000) + (tzMinutes() + offsetMinutes()) * 60;
+    const frame = [0xDD, (t >>> 24) & 0xFF, (t >>> 16) & 0xFF, (t >>> 8) & 0xFF, t & 0xFF];
+    await charRxTx.writeValue(new Uint8Array(frame));
+    const show = new Date(Date.now() + offsetMinutes() * 60000).toTimeString().slice(0, 5);
+    log(`✓ Time synced: ${frame.map(b => b.toString(16).padStart(2, '0').toUpperCase()).join(' ')}, the clock will show ${show}`);
+  } catch (e) { log('✗ Time sync failed: ' + e.message); }
+  finally { timeSyncing = false; $('btnTimeSync').disabled = !charRxTx; }
+}
+
+// ---- Name card: static artwork + live date/time ----
+const CARD_BLACK_B64 = "/AAAAAAAAAAAAAAAAAAAAAAAP//////////////////////////D///////////////////////D3wAAAAAAAAAAAAAAAAAAAAAA+98AAAAAAAAAAAAAAAAAAAAAA/vd//////////////////////+7ewAAAAAAAAAAAAAAAAAAAAAA3noAAAAAAAAAAAAAAAAAAAAAAF5sAAAAAAAAAAAAAAAAAAAAAAA2bB+Pn9/B/PmN/PwAA7gAAHjwNmwfn5+fwfz5jPz8AAe8AAD9+DZsGBjGAcHBzYwMMAAMZsJgzZg2bBgYxgOBwc2MPDAADAbCYM2YNmwfH8YHAfn9jHgwAA4GwmB9+DZsHx/GDgHx/YzwMAADDMJAPPg2bBgYxhgBwc2NwDAAAbD52Aw4NmwYGMccAcHN3cA4AAGweZh48DZsGBjf38HBzPn8/AAAYAAAOGA2bAAAAAAAAAAAAAAAAAAAAAAANmwAAAAAAAAAAAAAAAAAAAAAADZsH/////////////////////g2bD/////////////////////8NmxAAAAAAAAAAAAAAAAAAAAAAjZsgAAAAAAAAAAAAAAAAAAAAAE2bIAAAAAAAAAAAAAAAAAAB//xtmyAAAAAAAAAAAAAAB577wf/8bZsgAAAAAAAAAAAAAAfe+8kADG2bIAAAAAAAAAAAAAAE0iGJAA5tmyAAAAAAAAAAAAAAB54hgQAObZsgAAAAAAAAAAAAAATSIYkADm2bIAAAAAAAAAAAAAAH0iGJ//xtmyAAAAAAAAAAAAAAB5Ihgf/8bZsgAAAAAAAAAAAAAAAAAAAAAG2bIAAAAAAAAAAAAAAAAAAAAADNmxgAAAAAAAAAAAAAAAAAAAAAjZsP/////////////////////w2bAAAAAAAAAAAAAAAAAAAAAAANmwAAAAAAAAAAAAAAAAAAAAAADZsAAAAAAAAAAAAAAAAAAAAAAA2bAAAAAAAAAAAf+EAAAAAAAAANmwAAAAAAAAAAH/xAAAAAAAAADZsAAAAAAAAAB/9/sAAAAAAAAA2bAAAAAAAAAD////gAAAAAAAANmwAAAAAAAAA//434AAAAAAAADZsAAAAAAAAB+H/izgAAAAAAAA2bAAAAAAAAA/h/4/4AAAAAAAANmwAAAAAAAAf/w/O2wAAAAAAADZsEb8AAAAAP8P3z9uAAAAAAAA2bBG/AAAAAD/D99/bgAAAAAAANmwRswAAAAA/fff/PwAAAAAAADZsH78AAAAA/v///v+AAAAAAAA2bB++AAAAAP////7/wAAAAAAANmwRsAAAAADn/+D/+OAAAAAAADZsEbAAAAAA5/gAAP9gAAAAAAA2bBGwAAAAAOfwAAD/YAAAAAAANmwAAAAAAADn4AAAH5AAAAAAADZsAAAAAAAB++AAAB/wAAAAAAA2bAAAAAAAAfvgAAAf8AAAAAAANmwOPgAAAAH/cAAAD/AAAAAAADZsGfMAAAAB/2wAAAPwAAAAAAA2bDHxgAAAAf9sAAAD8AAAAAAANmxgQIAAAAHnbAAAA/AAAAAAADZsYECAAAAB/tgAAAPwAAAAAAA2bGABgAAAAfyQAAAD8AAAAAAANmxwAYAAAAH4AAAAAPAAAAAAADZsPAYAAAAB8AAAAADwAAAAAAA2bBwGAAAAAcAAAAAA8AAAAAAANmwOCAAAAAHD+AAH4HAAAAP/+DZsB7AAABABx/4AP/hwAAAH//42bAOwAAAwAcYfAD4YcAAABwAONmwBwAAAbADH////+HAAAAQABjZsAMAAADgB3/////x8AAAEAAY2bAAAAAAQAdgBgMAEfAAABAAGNmwAAAAAAAbg/H+fw+IAAAQABjZsDh4AAAAH4f5/v+PyAAAEAAY2bA4+AAAAB+NzYbcjcgAABAAGNmwR8YAAAAbgAGGAA2IAAAQABjZsMfGAAAAG4ABhgANyAAAEAAY2bGBBgAAABuAAYYADegAABAAGNmxgAYAAAAEgAYDAAzwAAAQABjZscAGAAAABMAGAwAMcAAAEAAY2bHABgAAAARgBgMAEDAAABAAGNmwcBgAAAAEH/wA/+AwAAAcADjZsHg4AAAABB/4AP/gMAAAH//42bA4IAAAAAQACYbAADAAAA//4NmwCMAAAAEHAAYDAAHAAAAAAADZsA/AAAADBwAGAQABwAAAAAAA2bAHAAAADgMAAAAAAYAAAAAAANmwAAAAADgDAAAAAAGAAAAAAADZsAAAAAA8AwAAAAABgAAAAAAA2bAAAAAAfgMAAAAAAYAAAAAAANmwAAAAABgAgAf/AAIAAAAAAADZsHj4AAAYAIAH/wADAAAAAAAA2bD++AAAMACACAAgA4AAAAAAANmxl44AAAAA4AAAAA/wAAAAAADZsYcGAAAAAOAAAAAP8AAAAAAA2bGABgAAAAfgAPgAD7+AAAAAANmxgAYAAAD58AAAAB/g+AAAAADZsYAGAAAA+PgAAAA/wPgAAAAA2bBABgAAD8T8AAAAb+4fAAAAANmwMBgAAH///gAAAM//P4AAAADZsDAYAAD4e/8AAAGP97DAAAAA2bAIIAAH2Pj7sNhjH/ffAAAAANmwBsAAD/n4//n+/h/338AAAADZsAbAAAw7+f39tvw/99vAAAAA2bABAAAG9//8f//4ff/+wAAAANmwAAAAD/f//n//8P3//8AAAADZsAAAAA/3/38P/8H9///AAAAA2bAAAAAP/9+fgf4H8/3/wAAAANmwAAAAD//f//H8P//5/8AAAADZsAAAAA//3+/wAH/v8f/AAAAA2bAAAAAP/3/v////v/f/wAAAANmwAAAAD/8/7////5/3/4AAAADZsAAAAAAAAAAAAAAAAAAAAAAA2bAAAAAAAAAAAAAAAAADwAAAANmwAAAA+Anh/n+f5/j/B9AAAADZsAAAAf2J8f5/n+f9/4j4AAAA2bAAAAGBmRn+f5/n/f+YdAAAANmwAAABgfkZ/n+f5/3/n/QAAADZsAAAAfDx+f5/n+f9/5eUAAAA2bAAAAHw8fH+f5/n/f+wFAAAANmwAAABgPEB/n+f5/3/v9wAAADZsAAAAYGZAf5/n+f9/7BcAAAA2bAAAAH9mQH+f5/n/f+YeAAAANmwAAAA+QkB/n+f5/3/D+AAAADZsAAAAAAAAAAAAAAAAAAAAAAA2bAAAAAAAAAAAAAAAAAAAAAAANmwAAAAAAAAAAAAAAAAAAAAAADZv///////////////////////2bAAAAAAAAAAAAAAAAAAAAAAANmwAAAAAAAAAAAAAAAAAAAAAADZsAAAA//////////////8AAAA2bAAAA///////////////wAAANmwAAAP//////////////8AAADZsAAADwXwwwYYfdhh2YZvAAAA2bAAAA9999nOyzybLMmybwAAANmwAAAPffffzsu8Gy7Bsi8AAADZsAAADx3x384bvVgu0YJPAAAA2bAAAA9999/Om73bLtmyTwAAANmwAAAPfffdzss9267Zsm8AAADZsAAADwQwwc7IPduh2bJvAAAA2bAAAA///////////////wAAANmwAAAP//////////////8AAADZsAAAA//////////////8AAAA2bgAAAP//////////////AAAAdm8AAAAAAAAAAAAAAAAAAAAAAPb7///////////////////////f/////////////////////////9wAAAAAAAAAAAAAAAAAAAAAADvP///////////////////////z//////////////////////////z//////////////////////z8=";
+const CARD_RED_B64 = "AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAADmAAAAAAAAAAAAAAAAAAAAAAAA/gAAAAAAAAAAAAAAAAAAAAAAAH4AAAAAAAAAAAAAAAAAAAAAAAA8AAAAAAAAAAAAAAAAAAAAAAAAEAAAAAAAAAAAAAAAAAAAAAAAABAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAYAAAAAAAAAAAAAAAAAAAAAAAAGAAAAAAAAAAAAAAAAAAAAAAAABgAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAB8AAAAAAAAAAAAAAAAAAAAAAAeABwAAAAAAAAAAAAAAAAAAAAAPgAcAAAAAAAAAAAAAAAAAAAAAHAAA4AAAAAAAAAAAAAAAAAAAABgAACAAAAAAAAAAAAAAAAAAAAAQAAAgAAAAAAAAAAAAAAAADAAAgAAAEAAAAAAAAAAABgwAAAIAAAAAAAQAAAAAAAAAAA4OAAACAAAAAAAEAAAAAAAAAAATvwAAH4AYAAAABAAAAAAAAAAAH78AAA4AAAAAAAAAAAAAAAAAAB/+AAAOAAAAAAAAAAAAAAAAAAAP/gAAA4AAAAAAAwAAAAAAAAAAA/gAAABAAAAAAAMAAAAAAAAAAAP4AAAAQCAAAAADAAAAAAAAAAAB8AAAAAAgBAAIAIAAAAAAAAAAAEAAAAAAIAGAQACAAAAAAAAAAABAAAAAACHggEHggAAAAP/wAAAAAAAAEAAgAAAAAIAAAAPx+AAAAAAAAAAAIAAAAACAAAAD8fgAAAAAAAAAACAOQTgAgAAAA/H4AAAAAAAAAAADA4BgIBAAAAPx+AAAAAAAAAAABgGAQBAMAAAD8fgAAAAAAAAAAAQAkkAYjAAAA/H4AAAODgAAAAEADBIwAJwAAAPx+AAADg4AAAABAAwSMACMAAAD+fgAABO+AAAAAQBwAA4ABAAAA//4AAAf/gAAAADAAEEAAEAAAAPx+AAAD/4AAAAAwABBAABgAAAD8fgAAA/+AAAAAMACADAAcAAAA/H4AAAD+AAAAADAAAAAAGAAAAD/8AAAAfAAAAAAwAAAAABgAAAAAAAAAAHwAAAAAMAAAAAAcADAAAAAAAABwAAAAAAAAn8wAAABwAAAAAAAAAAAAAAAAAJ/sAAAAcAAAAAAAAAAAAAAAAAMAAgAgAcAAAAAAAAAAAAAAAAAEAAGAIAP4AAAAAAAAAAAAAAAABAABACAD+AAAAAAAAAAAAAAACAAc4AAgAHAAAAAAAAAAAAAAAAYAAAIAwADgAAAAAAAAAAAAAAAGAAAGAMABwAAAAAAAAAAAAAAABgMADADAAYAAAAAAAASHAAAAAAAAIBAAAAAAAAAAAAAEj4AAAAAAACAQAAAAAAAAAAAAB/+AAAAAAQAQYAEEAAAAAAAAAAf/gAAAAGDAGGAGAfAAAAAAAAAH/4AAAABwQBBABAPwAAAAAAAAA/+AAAADsCAAAAkBHgAAAAAAAAD+AAAAAAAYAABzAAwAAAAAAAAA/gAAAHhACAAAZwCE8AAAAAAAAHwAAAJwcEQAAc4AggwAAAAAAAAQAAAAYHAAYBAeAIIAAAAAAAAAEAAAPEBgICSQPACCQAAAAAAAAAAAAJCAADgAAHggABAAAAAAAAAAAAAAgAAYAADwIAAAAAAAAAAAAAAAAIAIDwAD4CAAAAAAAAAAAAAAAAACBgfgH4DAIAAAAAAAAAAAAAAAAgAA4DwAAGAAAAAAAAAAAAAAAAIBAP/4AQDgAAAAAAAAAAAAAAAIAQAAAAQAgAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAcAAAAAAAAAAAAAAAAAAAAAAAAHgAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAhgAAAAAAAAAAAAAAAAAAAAAAAP4AAAAAAAAAAAAAAAAAAAAAAAACAAAAAAAAAAAAAAAAAAAAAAAA+gAAAAAAAAAAAAAAAAAAAAAAAHgAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA////AAAAAAAAAAAAAAD///8AAP///AAAAAAAAAAAAAAAP///AADz9/wAAAAAAAAAAAAAAD/vzwAA8fH8AAAAAAAAAAAAAAA/j48AAPBw/AAAAAAAAAAAAAAAPw8PAADwcPwAAAAAAAAAAAAAAD8ODwAA8DA8AAAAAAAAAAAAAAA8DA8AAPBwfAAAAAAAAAAAAAAAPg4PAADwcPwAAAAAAAAAAAAAAD8ODwAA8fH8AAAAAAAAAAAAAAA/j48AAP///AAAAAAAAAAAAAAAP///AAD///wAAAAAAAAAAAAAAD///wAAf///AAAAAAAAAAAAAAD///4AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA=";
+const CARD_FONT = [[0,0,0,0,0],[0,6,95,6,0],[7,3,0,7,3],[36,126,36,126,36],[36,43,106,18,0],[99,19,8,100,99],[54,73,86,32,80],[0,7,3,0,0],[0,62,65,0,0],[0,65,62,0,0],[8,62,28,62,8],[8,8,62,8,8],[0,224,96,0,0],[8,8,8,8,8],[0,96,96,0,0],[32,16,8,4,2],[62,81,73,69,62],[0,66,127,64,0],[98,81,73,73,70],[34,73,73,73,54],[24,20,18,127,16],[47,73,73,73,49],[60,74,73,73,48],[1,113,9,5,3],[54,73,73,73,54],[6,73,73,41,30],[0,108,108,0,0],[0,236,108,0,0],[8,20,34,65,0],[36,36,36,36,36],[0,65,34,20,8],[2,1,89,9,6],[62,65,93,85,30],[126,17,17,17,126],[127,73,73,73,54],[62,65,65,65,34],[127,65,65,65,62],[127,73,73,73,65],[127,9,9,9,1],[62,65,73,73,122],[127,8,8,8,127],[0,65,127,65,0],[48,64,64,64,63],[127,8,20,34,65],[127,64,64,64,64],[127,2,4,2,127],[127,2,4,8,127],[62,65,65,65,62],[127,9,9,9,6],[62,65,81,33,94],[127,9,9,25,102],[38,73,73,73,50],[1,1,127,1,1],[63,64,64,64,63],[31,32,64,32,31],[63,64,60,64,63],[99,20,8,20,99],[7,8,112,8,7],[113,73,69,67,0],[0,127,65,65,0],[2,4,8,16,32],[0,65,65,127,0],[4,2,1,2,4],[128,128,128,128,128],[0,3,7,0,0],[32,84,84,84,120],[127,68,68,68,56],[56,68,68,68,40],[56,68,68,68,127],[56,84,84,84,8],[8,126,9,9,0],[24,164,164,164,124],[127,4,4,120,0],[0,0,125,64,0],[64,128,132,125,0],[127,16,40,68,0],[0,0,127,64,0],[124,4,24,4,120],[124,4,4,120,0],[56,68,68,68,56],[252,68,68,68,56],[56,68,68,68,252],[68,120,68,4,8],[8,84,84,84,32],[4,62,68,36,0],[60,64,32,124,0],[28,32,64,32,28],[60,96,48,96,60],[108,16,16,108,0],[156,160,96,60,0],[100,84,84,76,0],[8,62,65,65,0],[0,0,119,0,0],[0,65,65,62,8],[2,1,2,1,0]]; // 6x8 font (5 columns per glyph, bit0 = top row), from OneBitDisplay (Apache-2.0)
+function unpackBits(b64) {
+  const bin = atob(b64), out = new Uint8Array(W * H);
+  for (let i = 0; i < W * H; i++) out[i] = (bin.charCodeAt(i >> 3) >> (7 - (i & 7))) & 1;
+  return out;
+}
+function cardText(buf, s, x, y) {
+  for (const ch of s) {
+    const g = CARD_FONT[ch.charCodeAt(0) - 32] || CARD_FONT[0];
+    for (let cx = 0; cx < 5; cx++) for (let r = 0; r < 8; r++)
+      if ((g[cx] >> r) & 1) buf[(y + r) * W + x + cx] = 1;
+    x += 6;
+  }
+}
+function composeCard() {
+  const now = new Date(Date.now() + offsetMinutes() * 60000);
+  // offsetMinutes() is the manual offset; the browser already gives local time
+  const mon = ['JAN','FEB','MAR','APR','MAY','JUN','JUL','AUG','SEP','OCT','NOV','DEC'][now.getMonth()];
+  const date = mon + ' ' + now.getDate();
+  const h = now.getHours(), mi = now.getMinutes();
+  const time = ((h % 12) || 12) + ':' + String(mi).padStart(2, '0') + ' ' + (h < 12 ? 'AM' : 'PM');
+  bmp = unpackBits(CARD_BLACK_B64); redBmp = unpackBits(CARD_RED_B64);
+  drawCardSlot(bmp, 0); drawCardSlot(bmp, 1);
+  cardStatsPreview();
+  cardText(bmp, date, 10, 24);
+  cardText(bmp, time, 95 - (time.length * 6 - 1), 24);
+  srcImage = null; drawPreview();
+  if (charEPD) $('btnSend').disabled = false;
+  $('cardInfo').textContent = 'Card composed: ' + date + '  ' + time;
+}
+// ---- Card text (name / title) ----
+const CARD_FONT8 = [[0,0,0,0,0,0,0],[0,0,6,95,95,6,0],[0,7,7,0,7,7,0],[20,127,127,20,127,127,20],[36,46,42,107,107,58,18],[70,102,48,24,12,102,98],[48,122,79,93,55,122,72],[0,4,7,3,0,0,0],[0,28,62,99,65,0,0],[0,65,99,62,28,0,0],[8,42,62,28,62,42,8],[0,8,8,62,62,8,8],[0,0,128,224,96,0,0],[0,8,8,8,8,8,8],[0,0,0,96,96,0,0],[96,48,24,12,6,3,1],[62,127,89,77,71,127,62],[64,66,127,127,64,64,0],[98,115,89,73,111,102,0],[34,99,73,73,127,54,0],[24,28,22,83,127,127,80],[39,103,69,69,125,57,0],[60,126,75,73,121,48,0],[3,3,113,121,15,7,0],[54,127,73,73,127,54,0],[6,79,73,105,63,30,0],[0,0,0,102,102,0,0],[0,0,128,230,102,0,0],[8,28,54,99,65,0,0],[0,20,20,20,20,20,20],[0,65,99,54,28,8,0],[0,2,3,89,93,7,2],[62,127,65,93,93,95,14],[124,126,19,19,126,124,0],[65,127,127,73,73,127,54],[28,62,99,65,65,99,34],[65,127,127,65,99,62,28],[65,127,127,73,93,65,99],[65,127,127,73,29,1,3],[28,62,99,65,81,51,114],[127,127,8,8,127,127,0],[0,65,127,127,65,0,0],[48,112,64,65,127,63,1],[65,127,127,8,28,119,99],[65,127,127,65,64,96,112],[127,127,14,28,14,127,127],[127,127,6,12,24,127,127],[28,62,99,65,99,62,28],[65,127,127,73,9,15,6],[30,63,33,49,97,127,94],[65,127,127,9,25,127,102],[38,111,77,73,89,115,50],[3,65,127,127,65,3,0],[127,127,64,64,127,127,0],[31,63,96,96,63,31,0],[63,127,96,48,96,127,63],[99,119,28,8,28,119,99],[7,79,120,120,79,7,0],[71,99,113,89,77,103,115],[0,127,127,65,65,0,0],[1,3,6,12,24,48,96],[0,65,65,127,127,0,0],[8,12,6,3,6,12,8],[128,128,128,128,128,128,128],[0,0,3,7,4,0,0],[32,116,84,84,60,120,64],[65,127,63,72,72,120,48],[56,124,68,68,108,40,0],[48,120,72,73,63,127,64],[56,124,84,84,92,24,0],[72,126,127,73,3,6,0],[152,188,164,164,248,124,4],[65,127,127,8,4,124,120],[0,68,125,125,64,0,0],[96,224,128,132,253,125,0],[65,127,127,16,56,108,68],[0,65,127,127,64,0,0],[124,124,24,120,28,124,120],[124,120,4,4,124,120,0],[56,124,68,68,124,56,0],[132,252,248,164,36,60,24],[24,60,36,164,248,252,132],[68,124,120,76,4,12,24],[72,92,84,116,100,36,0],[4,4,62,127,68,36,0],[60,124,64,64,60,124,64],[28,60,96,96,60,28,0],[60,124,96,48,96,124,60],[68,108,56,16,56,108,68],[156,188,160,160,252,124,0],[76,100,116,92,76,100,0],[8,8,62,119,65,65,0],[0,0,0,119,119,0,0],[65,65,119,62,8,8,0],[2,3,1,3,2,3,1]]; // 8x8 font, 7 columns per glyph (OneBitDisplay)
+function cardCols(s, big) {
+  s = s.toUpperCase().replace(/[^ -~]/g, '?');
+  let cols = [];
+  for (const ch of s) {
+    const i = ch.charCodeAt(0) - 32;
+    cols = cols.concat(big ? [0].concat(CARD_FONT8[i]) : CARD_FONT[i].concat([0]));
+  }
+  while (cols.length && cols[0] === 0) cols.shift();
+  while (cols.length && cols[cols.length - 1] === 0) cols.pop();
+  return cols;
+}
+// returns {x, cols} for the name (slot 0) or title (slot 1), or null if empty
+function cardSlot(slot) {
+  const txt = ($(slot ? 'cardTitle' : 'cardName').value || '').trim();
+  if (!txt) return null;
+  const big = txt.length <= 10;
+  const cols = cardCols(txt, big);
+  if (cols.length > 88) cols.length = 88;
+  const x = slot ? Math.round(75.5 - cols.length / 2) : 9;
+  return { x, cols };
+}
+function drawCardSlot(buf, slot) {
+  const sl = cardSlot(slot);
+  if (!sl) return;
+  const [cx, cy, cw, ch, ty, ink] = slot ? [32, 132, 88, 10, 133, 0] : [8, 8, 81, 11, 9, 1];
+  for (let y = 0; y < ch; y++) for (let x = 0; x < cw; x++) buf[(cy + y) * W + cx + x] = slot ? 1 : 0;
+  sl.cols.forEach((c, i) => { for (let r = 0; r < 8; r++) if ((c >> r) & 1) buf[(ty + r) * W + sl.x + i] = ink; });
+}
+async function saveCardText() {
+  if (!charEPD || sending) return;
+  try {
+    for (const slot of [0, 1]) {
+      const sl = cardSlot(slot);
+      const frame = sl ? Uint8Array.from([0x07, slot, sl.x, sl.cols.length].concat(sl.cols)) : Uint8Array.from([0x07, slot, 0, 0]);
+      await charEPD.writeValue(frame);
+    }
+    await charEPD.writeValue(Uint8Array.from([0x08]));
+    log('✓ Name and title saved to the tag; it redraws the card with a full refresh (about 15 s).');
+  } catch (e) { log('✗ Saving text failed: ' + e.message); }
+}
+async function resetCardText() {
+  if (!charEPD || sending) return;
+  try { await charEPD.writeValue(Uint8Array.from([0x09])); log('✓ Back to the artwork text; the tag redraws the card.'); }
+  catch (e) { log('✗ Reset failed: ' + e.message); }
+}
+$('btnCardText').onclick = saveCardText;
+$('btnCardReset').onclick = resetCardText;
+['cardName', 'cardTitle'].forEach(id => $(id).oninput = () => { composeCard(); });
+
+// ---- Card stats (HP / EXP / BATT) ----
+function hm(v, d) { const m = /^(\d{1,2}):(\d{2})$/.exec(v || ''); return m ? (+m[1] * 60 + +m[2]) : d; }
+function lvStartVal() { return $('cardLvOn').checked ? hm($('cardLvStart').value, 480) : 0xFFFF; }
+function expWindow() { return [hm($('cardExpStart').value, 480), hm($('cardExpEnd').value, 1020)]; }
+function cardStatsPreview() {
+  const hp = parseInt($('cardHp').value, 10);
+  const heartY = [58, 74, 92];
+  for (let i = hp; i < 3; i++) for (let y = heartY[i]; y < heartY[i] + 14; y++) for (let x = 9; x <= 24; x++) redBmp[y * W + x] = 0;
+  let pct = parseInt($('cardExp').value, 10);
+  if ($('cardExpMode').value === '1') {
+    const now0 = new Date(Date.now() + offsetMinutes() * 60000);
+    const nowM = now0.getHours() * 60 + now0.getMinutes();
+    let st = expWindow()[0], en = expWindow()[1];
+    if (st === en) en = (st + 1) % 1440;
+    if (st < en) pct = nowM <= st ? 100 : (nowM >= en ? 0 : 100 - Math.floor((nowM - st) * 100 / (en - st)));
+    else { const dur = en - st + 1440, el = (nowM - st + 1440) % 1440; pct = el < dur ? 100 - Math.floor(el * 100 / dur) : 0; }
+  }
+  const setB = (x, y, v) => { bmp[y * W + x] = v; };
+  for (let y = 115; y <= 125; y++) for (let x = 56; x <= 106; x++) setB(x, y, 0);
+  for (let x = 57; x <= 105; x++) { setB(x, 116, 1); setB(x, 124, 1); }
+  for (let y = 116; y <= 124; y++) { setB(57, y, 1); setB(105, y, 1); }
+  const w = Math.floor((pct * 47 + 50) / 100);
+  for (let x = 0; x < w; x++) for (let y = 117; y <= 123; y++) setB(58 + x, y, 1);
+  if ($('cardLvOn').checked) {
+    const now1 = new Date(Date.now() + offsetMinutes() * 60000);
+    const lst = hm($('cardLvStart').value, 480);
+    const lvl = Math.floor(((now1.getHours() * 60 + now1.getMinutes() - lst + 1440) % 1440) / 60) + 1;
+    for (let y = 8; y <= 18; y++) for (let x = 127; x <= 143; x++) setB(x, y, 0);
+    [Math.floor(lvl / 10), lvl % 10].forEach((dg, d) => {
+      if (d === 0 && dg === 0) return;
+      const g = CARD_FONT8[48 + dg - 32];
+      for (let cx = 0; cx < 7; cx++) for (let r = 0; r < 8; r++) if ((g[cx] >> r) & 1) setB(128 + d * 8 + cx, 9 + r, 1);
+    });
+  }
+  const bp = $('cardBattMode').value === '1' ? parseInt($('cardBatt').value, 10) : 100; // preview shows 100% for "real"
+  const bw = Math.floor((bp * 12 + 50) / 100);
+  for (let x = 126; x <= 137; x++) for (let y = 26; y <= 29; y++) { setB(x, y, 0); redBmp[y * W + x] = 0; }
+  for (let x = 126; x < 126 + bw; x++) for (let y = 26; y <= 29; y++) { if (bp < 20) redBmp[y * W + x] = 1; else setB(x, y, 1); }
+}
+async function saveCardStats() {
+  if (!charEPD || sending) return;
+  try {
+    await charEPD.writeValue(Uint8Array.from([0x0A, parseInt($('cardHp').value, 10), parseInt($('cardExpMode').value, 10),
+      parseInt($('cardExp').value, 10), parseInt($('cardBattMode').value, 10), parseInt($('cardBatt').value, 10),
+      expWindow()[0] >> 8, expWindow()[0] & 255, expWindow()[1] >> 8, expWindow()[1] & 255,
+      lvStartVal() >> 8, lvStartVal() & 255, parseInt($('cardRefresh').value, 10), $('cardLed').checked ? 0 : 1]));
+    await charEPD.writeValue(Uint8Array.from([0x08]));
+    log('✓ HP / EXP / BATT saved to the tag; it redraws the card with a full refresh (about 15 s).');
+  } catch (e) { log('✗ Saving stats failed: ' + e.message); }
+}
+$('btnCardStats').onclick = saveCardStats;
+['cardLvOn', 'cardLvStart', 'cardHp', 'cardExpMode', 'cardExp', 'cardExpStart', 'cardExpEnd', 'cardBattMode', 'cardBatt'].forEach(id => $(id).oninput = () => {
+  $('cardExpVal').textContent = $('cardExp').value; $('cardBattVal').textContent = $('cardBatt').value; composeCard();
+});
+
+let cardTimer = null, cardLastSlot = -1;
+function cardTick() {
+  if (!$('cardAuto').checked || !charEPD || sending) return;
+  const every = parseInt($('cardEvery').value, 10);
+  const nowMin = Math.floor(Date.now() / 60000);
+  const slot = Math.floor(nowMin / every);
+  if (slot === cardLastSlot) return;
+  cardLastSlot = slot;
+  composeCard(); sendImage();
+}
+$('btnCard').onclick = composeCard;
+$('cardAuto').onchange = () => {
+  cardLastSlot = -1;
+  if ($('cardAuto').checked) { if (!cardTimer) cardTimer = setInterval(cardTick, 5000); cardTick(); }
+  else if (cardTimer) { clearInterval(cardTimer); cardTimer = null; }
+};
+
+// ---- Event bindings ----
+$('btnFlashLoad').onclick = () => {
+  const f = $('flashFrame');
+  if (!f.src) f.src = 'https://atc1441.github.io/ATC_TLSR_Paper_UART_Flasher.html';
+  f.classList.add('on'); f.scrollIntoView({ behavior: 'smooth', block: 'start' });
+};
+$('btnFile').onclick = () => $('fileInput').click();
+$('fileInput').onchange = e => { if (e.target.files[0]) loadFile(e.target.files[0]); e.target.value = ''; };
+$('btnTest').onclick = testPattern;
+$('btnRot').onclick = () => transform('rot');
+$('btnFlipH').onclick = () => transform('fliph');
+$('btnFlipV').onclick = () => transform('flipv');
+$('btnInv').onclick = () => transform('inv');
+$('btnConnect').onclick = connect;
+$('btnReconn').onclick = reconnect;
+$('btnSend').onclick = sendImage;
+$('btnTimeSync').onclick = syncTime;
+$('timeOffset').oninput = () => {
+  updateTimePanel();
+  try { localStorage.setItem('epaper_timeOffset', $('timeOffset').value); } catch (_) {}
+};
+$('btnDisc').onclick = () => { if (server) server.disconnect(); };
+$('ditherMode').onchange = renderPipeline;
+$('threshold').oninput = e => { $('thresholdVal').textContent = e.target.value; renderPipeline(); };
+document.querySelectorAll('input[name=fit]').forEach(r => r.onchange = renderPipeline);
+
+const dz = $('dropZone');
+dz.ondragover = e => { e.preventDefault(); dz.style.outline = '3px dashed #0366d6'; };
+dz.ondragleave = () => dz.style.outline = '';
+dz.ondrop = e => { e.preventDefault(); dz.style.outline = '';
+  if (e.dataTransfer.files[0]) loadFile(e.dataTransfer.files[0]); };
+document.addEventListener('paste', e => {
+  for (const item of e.clipboardData.items)
+    if (item.type.startsWith('image/')) { loadFile(item.getAsFile()); break; }
+});
+
+// createImageBitmap does not decode SVG blobs, so SVGs are first rasterised through an <img>
+async function svgToBitmap(blob) {
+  const url = URL.createObjectURL(blob);
+  const img = new Image();
+  img.src = url;
+  try {
+    await img.decode();
+    if (!img.naturalWidth || !img.naturalHeight)
+      throw new Error('The SVG root element has no width/height, so the size cannot be determined');
+    const c = document.createElement('canvas');
+    c.width = img.naturalWidth; c.height = img.naturalHeight;
+    c.getContext('2d').drawImage(img, 0, 0);
+    return await createImageBitmap(c);
+  } finally { URL.revokeObjectURL(url); }
+}
+
+async function loadFile(file) {
+  try {
+    if (file.type === 'image/svg+xml' || /\.svgz?$/i.test(file.name || ''))
+      srcImage = await svgToBitmap(file);
+    else
+      srcImage = await createImageBitmap(file);
+    log(`Loaded ${file.name || 'clipboard image'} (${srcImage.width}×${srcImage.height})`);
+    renderPipeline();
+    if (charEPD) $('btnSend').disabled = false;
+  } catch (e) { log('✗ Image load failed: ' + e.message); }
+}
+
+// Initial blank preview
+drawPreview();
+// Time panel: restore the last offset and refresh the preview every second
+let savedOff = NaN;
+try { savedOff = parseInt(localStorage.getItem('epaper_timeOffset'), 10); } catch (_) {}
+if (!Number.isNaN(savedOff)) $('timeOffset').value = Math.max(-720, Math.min(720, savedOff));
+// ---- Theme switcher (terminal / win98 / clean), remembered in this browser ----
+(function () {
+  let t = 'clean';
+  try { t = localStorage.getItem('tag_theme') || t; } catch (_) {}
+  if (!['terminal', 'win98', 'clean'].includes(t)) t = 'clean';
+  document.documentElement.setAttribute('data-theme', t);
+  $('themeSel').value = t;
+  $('themeSel').onchange = () => {
+    document.documentElement.setAttribute('data-theme', $('themeSel').value);
+    try { localStorage.setItem('tag_theme', $('themeSel').value); } catch (_) {}
+  };
+})();
+
+updateTimePanel();
+setInterval(updateTimePanel, 1000);
+log('Ready. Load an image or generate the test pattern -> connect the device -> send. To flash firmware use the UART flasher at the bottom of the page.');
+log('Tip: if the browser blocks Bluetooth permission for file://, run  python -m http.server  and open localhost instead.');
+</script>
+</body>
+</html>
