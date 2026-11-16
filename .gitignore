@@ -1,0 +1,7 @@
+Firmware/out/
+Firmware/ATC_Paper.bin
+Firmware/tc32_linux/
+Firmware/tc32_windows/
+*.o
+*.lst
+*.elf

@@ -1,0 +1,27 @@
+#pragma once
+
+#define epd_height 200
+#define epd_width 200
+#define epd_buffer_size ((epd_height/8) * epd_width)
+
+extern uint8_t epd_hold_image; // 1 = keep BLE-uploaded image, skip the minute clock redraw
+
+void set_EPD_model(uint8_t model_nr);
+void init_epd(void);
+int8_t EPD_read_temp(void);
+// red_image: red plane for tri-color models (may be NULL = no red content).
+// Only model 3 (BWR154) consumes it; other models ignore it.
+void EPD_Display(unsigned char *image, unsigned char *red_image, int size, uint8_t full_or_partial);
+void epd_display_tiff(uint8_t *pData, int iSize);
+void epd_display(uint32_t time_is, uint16_t battery_mv, int16_t temperature, uint8_t full_or_partial);
+void epd_set_sleep(void);
+uint8_t epd_state_handler(void);
+void epd_display_char(uint8_t data);
+void epd_clear(void);
+// Editable card text (see epd.c)
+void card_ovr_set(uint8_t slot, uint8_t x, uint8_t w, const uint8_t *data);
+void card_ovr_stats(uint8_t hp, uint8_t exp_mode, uint8_t exp_pct, uint8_t batt_mode, uint8_t batt_pct, uint16_t exp_start, uint16_t exp_end, uint16_t lv_start, uint8_t refresh_min, uint8_t led_off);
+uint8_t card_led_enabled(void);
+uint8_t card_refresh_interval(void);
+void card_ovr_commit(void);
+void card_ovr_reset(void);

@@ -113,3 +113,17 @@ buf[(151 - x) * 20 + ((y + 8) >> 3)] |= (0x80 >> ((y + 8) & 7));
 - 断开连接后标签恢复广播约需 1 个广播间隔（本 fork 已修复上游"断连后永不广播"
   的 bug；旧固件表现为断连一次后从扫描中消失，只能抠电池）
 - `file://` 协议下部分浏览器拦截 Web Bluetooth：`python -m http.server` 走 localhost
+
+## Card portraits (0x0B - 0x0D)
+
+The middle picture of the name card (53 x 78 px at x 52, y 36) can be replaced separately for each
+time of day. Scenes: 0 = MONIN (05:00-11:59), 1 = NOON (12:00-15:59), 2 = EVENIN (16:00-20:59),
+3 = NITE (21:00-04:59), by the tag's clock.
+
+| Command | Payload | Meaning |
+|---|---|---|
+| `0x0B` | `scene, offset_hi, offset_lo, data...` | Stage portrait bytes. 1034 bytes in total: the black-ink bitmap (517 bytes), then the red bitmap (517 bytes), row-major, MSB first, 1 = ink / red. The page sends 200 bytes per packet. Staging reuses the red-plane buffer, so send `05 01` (hold) first. |
+| `0x0C` | `scene` | Save the staged data to flash (one sector per scene at `0x51000 + scene * 0x1000`) and redraw with a full refresh. Also releases the hold. |
+| `0x0D` | `scene` | Erase the saved portrait of that scene (back to the built-in artwork) and redraw. |
+
+Pixels with y < 60 and x >= 100 are never overwritten, so the speech bubble stays intact.
